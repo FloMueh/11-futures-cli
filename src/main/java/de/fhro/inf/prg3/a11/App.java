@@ -56,7 +56,7 @@ public class App {
 
     private static void printCanteens()  {
         System.out.print("Fetching canteens [");
-        List<CompletableFuture<List<Canteen>>> canteenList = new ArrayList<CompletableFuture<List<Canteen>>>();
+        List<Canteen> canteenList = new ArrayList<Canteen>();
         CompletableFuture<Response<List<Canteen>>> canteensFuture = openMensaAPI.getCanteens();
         canteensFuture.supplyAsync(() -> {
             try {
@@ -70,22 +70,18 @@ public class App {
         }).thenApplyAsync((pageInfo) -> {
             int pages = pageInfo.getTotalCountOfPages();
             for(int i = pageInfo.getCurrentPageIndex(); i < pages; i++) {
-                    canteenList.add(openMensaAPI.getCanteens(i));
-            }
-            return null;
-        }).thenAccept((canteens) -> {
-            for(CompletableFuture<List<Canteen>> canteen : canteenList) {
                 try {
-                    for(Canteen canteenOut : canteen.get()) {
-                        System.out.println(canteenOut.getId() + " " + canteenOut.getName());
-                    }
+                    canteenList.addAll(openMensaAPI.getCanteens(i).get());
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } catch (ExecutionException e) {
                     e.printStackTrace();
                 }
             }
-
+            return null;
+        }).thenAccept((canteens) -> {
+            for(Canteen canteen : canteenList)
+                    System.out.println(canteen.getId() + " " + canteen.getName());
         });
     }
 
